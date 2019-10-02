@@ -14,7 +14,7 @@ let numEpisodes = 0
 let numActions = 2;
 let stateSize = 4;
 
-let model = Sequential({
+var model = Sequential({
     loss: MSE(),
     optimizer: SGD(.001)
 })
@@ -26,7 +26,7 @@ model
     .add(ReLU())
     .add(Linear(40, numActions, false))
 
-let agent = DQN({
+var agent = DQN({
     model,
     numActions,
     finalEpsilon: .1,
@@ -44,7 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
     actOutStep();
 
     document.getElementById("reset-button").addEventListener("click", e => {
-        env.reset()
+        env.reset();
+        reset();
+        numEpisodes=0;
     })
 })
 
@@ -70,7 +72,7 @@ function learn() {
               document.getElementById("rewardP").innerHTML = "Reward: " + totalReward
               totalReward=0
             }
-            document.getElementById("doneP").innerHTML = "Done: " + reply.done
+            document.getElementById("doneP").innerHTML = "Episodes: " + numEpisodes
             actOutStep();
         }
 }
@@ -80,3 +82,24 @@ function go() {
   current_interval_id = setInterval(learn, 0);
 }
 
+function reset() {
+    model = Sequential({
+        loss: MSE(),
+        optimizer: SGD(.001)
+    })
+
+    model
+        .add(Linear(stateSize, 40, false))
+        .add(ReLU())
+        .add(Linear(40, 40))
+        .add(ReLU())
+        .add(Linear(40, numActions, false))
+
+    agent = DQN({
+        model,
+        numActions,
+        finalEpsilon: .1,
+        epsilonDecaySteps: 10000,
+        gamma: .9
+    })
+}
